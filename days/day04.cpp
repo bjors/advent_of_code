@@ -51,7 +51,7 @@ SGuard FindMostSleepyGuard(const std::unordered_map<int, SGuard>& guards) {
 	return mostSleepyGuard->second;
 }
 
-int FindMostSleptMinute(const SGuard& guard) {
+std::pair<int, int> FindMostSleptMinute(const SGuard& guard) {
 	std::unordered_map<int, int> countPerMinute;
 	for (const auto& interval : guard.mSleepIntervals) {
 		for (int i=interval.mFirstMinute; i<interval.mLastMinute; ++i) {
@@ -63,7 +63,40 @@ int FindMostSleptMinute(const SGuard& guard) {
 		return left.second < right.second;
 	});
 
-	return mostSleptMinute->first;
+	if (mostSleptMinute == countPerMinute.end()) {
+		return std::make_pair(0,0);
+	} else {
+		return std::make_pair(mostSleptMinute->first, mostSleptMinute->second);		
+	}
+}
+
+int GetNumTimesSleptDuringMinute(const SGuard& guard, const int minute) {
+	int count = 0;
+	for (const auto& interval : guard.mSleepIntervals) {
+		if (minute >= interval.mFirstMinute && minute < interval.mLastMinute) {
+			count++;
+		}
+	}
+	return count;
+}
+
+std::pair<int, int> FindGuardMostFrequentlySleepingOnSameMinute(const std::unordered_map<int, SGuard>& guards) {
+	struct SMostSleptMinuteCount {
+		int mGuardId;
+		int mMinute;
+		int mCount;
+	};
+	std::vector<SMostSleptMinuteCount> mostSleptMinutesVector;
+	std::transform(guards.begin(), guards.end(), std::back_inserter(mostSleptMinutesVector), [](const std::pair<int, SGuard>& iter){
+		const auto guard = iter.second;
+		const auto mostSleptMinute = FindMostSleptMinute(guard);
+		return SMostSleptMinuteCount{guard.mId, mostSleptMinute.first, mostSleptMinute.second};
+	});
+
+	const auto iter = std::max_element(mostSleptMinutesVector.begin(), mostSleptMinutesVector.end(), [](const SMostSleptMinuteCount& left, const SMostSleptMinuteCount& right){
+		return left.mCount < right.mCount;
+	});
+	return std::make_pair(iter->mGuardId, iter->mMinute);
 }
 
 int main(int argc, char* argv[]) {
@@ -74,9 +107,10 @@ int main(int argc, char* argv[]) {
 	const auto mostSleepyGuard = FindMostSleepyGuard(guards);
 	const auto mostSleptMinute = FindMostSleptMinute(mostSleepyGuard);
 	
-	std::cout << "Part 1" << mostSleepyGuard.mId*mostSleptMinute << std::endl;
+	std::cout << "Part 1: " << mostSleepyGuard.mId*mostSleptMinute.first << std::endl;
 	
-	
+	const auto iter = FindGuardMostFrequentlySleepingOnSameMinute(guards);
+	std::cout << "Part 2: " << iter.first * iter.second << std::endl;
 	
 	return 0;
 }
