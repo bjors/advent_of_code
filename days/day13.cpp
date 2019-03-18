@@ -169,22 +169,6 @@ int main(int argc, char* argv[]) {
 		}
 	}
 	
-	
-	/*
-	
-	*/
-	
-	//const auto [initialState, formulas] = ParseInput();
-	
-	{
-	//	const auto sum = CalcSum(20, initialState, formulas);
-	//	std::cout << "Part 1: " << sum << std::endl;
-	}
-	
-	{
-	//	std::cout << "Part 2: " << sum << std::endl;
-	}
-	
 	return 0;
 }
 
