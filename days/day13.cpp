@@ -3,20 +3,7 @@
 #include <assert.h>
 #include <tuple>
 #include <optional>
-
-struct SVector2i {
-	int x;
-	int y;
-	
-	bool operator==(const SVector2i& other) const {
-		return x == other.x && y == other.y;
-	}
-	
-	void operator+=(const SVector2i& other) {
-		x += other.x;
-		y += other.y;
-	}
-};
+#include "Vector2i.h"
 
 struct SCart {
 	SVector2i pos;
