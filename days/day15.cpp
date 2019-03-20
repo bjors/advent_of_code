@@ -5,6 +5,7 @@
 #include "Vector2i.h"
 #include <set>
 #include <optional>
+#include <numeric>
 
 struct Cell {
 	enum CellType {
@@ -84,12 +85,14 @@ struct Board {
 			}
 		}
 		
+		/*
 		for (int y=0; y<height; ++y) {
 			for (int x=0; x<width; ++x) {
 				std::cout << distanceMap[x+y*width] << '\t';
 			}
 			std::cout << std::endl;
 		}
+		 */
 		
 		return distanceMap;
 	};
@@ -239,7 +242,7 @@ struct Board {
 		target.hp -= source.attackPower;
 	}
 	
-	void Tick() {
+	bool Tick() {
 		std::sort(units.begin(), units.end(), [&](const Unit& a, const Unit& b){
 			return CoordToIndex(a.pos) < CoordToIndex(b.pos);
 		});
@@ -247,6 +250,11 @@ struct Board {
 		for (int i=0; i<units.size(); ++i) {
 			auto& unit = units[i];
 			UpdateUnit(unit);
+			
+			if (GetNumUnitsLeft(Unit::UnitType::Elf) == 0||
+				GetNumUnitsLeft(Unit::UnitType::Guard)== 0) {
+				return false;
+			}
 			
 			for (int n=0; n<units.size(); ++n) {
 				if (units[n].hp <= 0) {
@@ -257,9 +265,9 @@ struct Board {
 					break;
 				}
 			}
-			
-			Draw();
 		}
+		
+		return true;
 	}
 	
 	SVector2i IndexToCoord(std::size_t index) const {
@@ -270,13 +278,53 @@ struct Board {
 		return coord.y * width + coord.x;
 	}
 	
+	int GetNumUnitsLeft(const Unit::UnitType unitType) const {
+		return std::reduce(units.begin(), units.end(), 0, [unitType](const int acc, const Unit& unit){
+			if (unit.unitType == unitType) {
+				return acc + 1;
+			} else {
+				return acc;
+			}
+		});
+	}
+
+	
 	const int width;
 	const int height;
 	std::vector<Cell> grid;
 	std::vector<Unit> units;
 };
 
-int main(int argc, char* argv[]) {
+struct BattleResult {
+	int battleOutcome;
+	Unit::UnitType winner;
+	Board board;
+};
+
+BattleResult SimulateBattle(Board board) {
+	int numRounds = 0;
+	while (true) {
+		if (!board.Tick()) {
+			break;
+		}
+		
+		numRounds++;
+	}
+	
+	const auto hpLeft = std::reduce(board.units.begin(), board.units.end(), 0, [](const int acc, const Unit& unit){
+		return acc + unit.hp;
+	});
+	
+	const auto winner = board.units.front().unitType;
+	
+	std::cout << "num rounds: " << numRounds << std::endl;
+	std::cout << "hp left: " << hpLeft << std::endl;
+	std::cout << "winner: " << (winner == Unit::Elf ? "Elf" : "Guard") << std::endl;
+	
+	return {numRounds * hpLeft, winner, board};
+}
+
+Board InitBoard(int elfAttackPower = 3) {
 	auto inputLines = utils::getInputLines("inputs/day15.txt");
 	
 	const int width = inputLines.front().size();
@@ -297,13 +345,44 @@ int main(int argc, char* argv[]) {
 			if (token == 'G'){
 				board.units.push_back(Unit{Unit::UnitType::Guard, SVector2i{(int)x,(int)y}});
 			} else if (token == 'E'){
-				board.units.push_back(Unit{Unit::UnitType::Elf, SVector2i{(int)x,(int)y}});
+				board.units.push_back(Unit{Unit::UnitType::Elf, SVector2i{(int)x,(int)y}, elfAttackPower});
 			}
 		}
 	}
 	
-	board.Draw();
-	board.Tick();
+	return board;
+}
+
+int main(int argc, char* argv[]) {
+	{
+		// Part 1
+		const auto battleResult = SimulateBattle(InitBoard());
+		std::cout << "Part 1: " << battleResult.battleOutcome << std::endl;
+	}
+
+	{
+		// Part 2
+		const auto battleResult = [](){
+			int attackPower = 4;
+			while (true) {
+				const auto initialBoard = InitBoard(attackPower);
+				const auto battleResult = SimulateBattle(initialBoard);
+				
+				const auto numElvesBefore = initialBoard.GetNumUnitsLeft(Unit::UnitType::Elf);
+				const auto numElvesAfter = battleResult.board.GetNumUnitsLeft(Unit::UnitType::Elf);
+				
+				if (numElvesBefore == numElvesAfter) {
+					return battleResult;
+				} else {
+					std::cout << "Num elves: " << numElvesAfter << "/" << numElvesBefore << std::endl;
+				}
+				attackPower++;
+				// slow but works
+			}
+		}();
+		
+		std::cout << "Part 2: " << battleResult.battleOutcome << std::endl;
+	}
 	
 	return 0;
 }
