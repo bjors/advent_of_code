@@ -23,4 +23,10 @@ struct SVector2i {
 	SVector2i operator+(const SVector2i& other) const {
 		return SVector2i{x+other.x, y+other.y};
 	}
+	SVector2i operator*(const int other) const {
+		return SVector2i{x*other, y*other};
+	}
+	SVector2i operator/(const int other) const {
+		return SVector2i{x/other, y/other};
+	}
 };
