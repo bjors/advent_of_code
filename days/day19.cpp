@@ -4,63 +4,7 @@
 #include <vector>
 #include <iostream>
 
-struct Machine2 : public MachineT<6> {
-	Machine2(const int ipRegister)
-	:ipRegister(ipRegister) {
-		
-	}
-	
-	int GetNextInstruction() const {
-		return registers[ipRegister];
-	}
-	
-	void PrintRegisters() const {
-		std::cout << " [";
-		for (const auto& r : registers) {
-			std::cout << r << ",";
-		}
-		std::cout << "]";
-	}
-	
-	OpCode ToOpCode(const std::string& instructionName) const {
-		if (instructionName == "seti") {
-			return OpCode::Seti;
-		} else if (instructionName == "addi") {
-			return OpCode::Addi;
-		} else if (instructionName == "addr") {
-			return OpCode::Addr;
-		} else if (instructionName == "setr") {
-			return OpCode::Setr;
-		} else if (instructionName == "mulr") {
-			return OpCode::Mulr;
-		} else if (instructionName == "muli") {
-			return OpCode::Muli;
-		} else if (instructionName == "eqir") {
-			return OpCode::Eqir;
-		} else if (instructionName == "eqri") {
-			return OpCode::Eqri;
-		} else if (instructionName == "eqrr") {
-			return OpCode::Eqrr;
-		} else if (instructionName == "gtir") {
-			return OpCode::Gtir;
-		} else if (instructionName == "gtri") {
-			return OpCode::Gtri;
-		} else if (instructionName == "gtrr") {
-			return OpCode::Gtrr;
-		} else {
-			return OpCode::NumOpcodes;
-		}
-	}
-	
-	void HandleInstruction(const Instruction& instruction) {
-		registers = MachineT<6>::HandleInstruction(instruction, registers);
-		
-		//PrintRegisters();
-		registers[ipRegister]++;
-	}
-	
-	const int ipRegister;
-};
+
 
 int Part2() {
 	
